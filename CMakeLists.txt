@@ -21,8 +21,7 @@ macro(marker_make_static_win_lib)
 	  CMAKE_CXX_FLAGS_RELEASE
 	  CMAKE_C_FLAGS
 	  CMAKE_C_FLAGS_DEBUG
-	  CMAKE_C_FLAGS_RELEASE
-	)
+	  CMAKE_C_FLAGS)
 
 	foreach(CompilerFlag IN LISTS CompilerFlags)
 		if(DEFINED ${CompilerFlag})
@@ -30,6 +29,9 @@ macro(marker_make_static_win_lib)
 			set(${CompilerFlag} "${UpdatedFlag}" CACHE STRING "MSVC Dynamic to Static Runtime" FORCE)
 		endif()
 	endforeach()
+
+	cmake_policy(SET CMP0091 NEW)
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebug")
 endmacro()
 
 #
@@ -49,8 +51,8 @@ macro(marker_fetch_component)
 	)
 
 	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
 	FetchContent_MakeAvailable(googletest)
+
 endmacro()
 
 # ---CMarker---
