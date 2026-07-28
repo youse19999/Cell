@@ -109,28 +109,39 @@ protected:
 			object.second->Update();
 		}
 	}
+	void RenderChildrenLoop(ID3D11Buffer* constantBuffer,CellTransformation* transformation)
+	{
+		if (transformation != nullptr) {
+			for (auto child : transformation->GetChildren()) {
+				RenderObject(constantBuffer, transformation);
+				if (!vramData[child]) {
+					continue;
+				}
+				if (transformation->GetVertexBuffer()) {
+					std::cout << vramData[child]->GetName() << std::endl;
+					RenderObject(constantBuffer, vramData[child]);
+					RenderChildrenLoop(constantBuffer, vramData[child]);
+				}
+			}
+		}
+	}
 	void InitializeGameObject()
 	{
 		for (auto object : gameObjects) {
 			object.second->CreateConstantBuffer(device);
 		}
 	}
-	void RenderObject(CellGameObject* object)
+	void RenderObject(ID3D11Buffer* constantBuffer,CellTransformation* transformation)
 	{
 		UINT stride = vertexStride * sizeof(float);
 		UINT offset = 0;
-		if (!object->GetVramData())
-		{
-			return;
-		}
-		ID3D11Buffer* vertexBuffer = object->GetVramData()->GetVertexBuffer();
+		ID3D11Buffer* vertexBuffer = transformation->GetVertexBuffer();
 		immediateContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
 		
-		immediateContext->IASetIndexBuffer(object->GetVramData()->GetIndexBuffer(), object->GetVramData()->GetIndexType(), 0);
+		immediateContext->IASetIndexBuffer(transformation->GetIndexBuffer(), transformation->GetIndexType(), 0);
 		immediateContext->IASetInputLayout(inputLayout);
 		immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		ID3D11Buffer* constantBuffer = object->GetConstantBuffer();
 		immediateContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 		immediateContext->PSSetConstantBuffers(0, 1, &constantBuffer);
 
@@ -142,7 +153,7 @@ protected:
 
 		immediateContext->OMSetRenderTargets(1, &renderTargetView, nullptr);
 
-		immediateContext->DrawIndexed(object->GetVramData()->Size(), 0, 0);
+		immediateContext->DrawIndexed(transformation->Size(), 0, 0);
 	}
 
 	//レンダー
@@ -164,7 +175,7 @@ protected:
 			float clear_color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			immediateContext->ClearRenderTargetView(renderTargetView, clear_color);
 			for (auto obj : gameObjects) {
-				RenderObject(obj.second);
+				RenderChildrenLoop(obj.second->GetConstantBuffer(), obj.second->GetVramData());
 			}
 
 			swapChain->Present(1, 0);

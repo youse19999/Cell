@@ -18,6 +18,7 @@ struct ConstantBuffer
 //トランスフォーメーションのデータ
 struct TransformationData {
 	const char* id;
+	std::string name;
 	//頂点メモリのポインタとしてのID3D11Buffer（COMポインタ）
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
@@ -29,6 +30,8 @@ struct TransformationData {
 	ConstantBuffer cbuffer;
 
 	unsigned int indexType;
+
+	bool isMesh = false;
 };
 
 
@@ -66,7 +69,7 @@ public:
 	{
 		if (data->children.size() == 0)
 		{
-			std::string s = "THIS_OBJECT_DONT_HAVE_CHILDREN!";
+			std::string s = "?__NOT_FOUNED__?";
 			return { s };
 		}
 		return data->children;
@@ -114,7 +117,10 @@ public:
 
 		hr = device->CreateBuffer(&bufferDesc2, &subresourceData2, &data->indexBuffer);
 
-
+	}
+	std::string GetName()
+	{
+		return this->data->name;
 	}
 };
 

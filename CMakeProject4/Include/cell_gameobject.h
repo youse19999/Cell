@@ -89,7 +89,7 @@ public:
 			farPlane
 		);
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 		ConstantBuffer cbuffer = {
 			glm::transpose(viewMatrix),
@@ -122,7 +122,7 @@ public:
 
 class ExampleCellGameObject :public HaveParentAndChildObject {
 private:
-	const char* WISId = "Body_2";
+	const char* WISId = "Root";
 public:
 	virtual CellTransformation* GetVramData()
 	{
