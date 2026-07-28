@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'GameEngine'
+project = 'CellGFX'
 copyright = '2026, Yousei Saitou'
 author = 'Yousei Saitou'
 
@@ -36,7 +36,7 @@ reathe_default_project = "GameEngine"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'scrolls'
+html_theme = 'sphinxdoc'
 html_static_path = []
 
 latex_docclass = {'mydocument': 'jsbook'}
