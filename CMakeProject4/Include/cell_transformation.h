@@ -9,7 +9,8 @@
 //指定のコンスタントバッファー
 struct ConstantBuffer
 {
-	glm::vec4 color;
+	glm::mat4 view;
+	glm::mat4 camera;
 	glm::mat4 model;
 };
 
@@ -18,10 +19,11 @@ struct TransformationData {
 	const char* id;
 	//頂点メモリのポインタとしてのID3D11Buffer（COMポインタ）
 	ID3D11Buffer* vertexBuffer;
+	ID3D11Buffer* indexBuffer;
 	//定数メモリのポインタとしてのID3D11Buffer（COMポインタ）
-	//ID3D11Buffer* constantBuffer;
-	//ID3D11Bufferが無効ならオフセットがここからvertexのサイズを頂点VRAM
 	std::vector<glm::vec3> vertex;
+	std::vector<unsigned char> index;
+	std::vector<std::string> children;
 	//ここからConstantBuffer分の定数のVRAM
 	ConstantBuffer cbuffer;
 };
@@ -33,16 +35,38 @@ private:
 public:
 	unsigned int Size()
 	{
-		return data->vertex.size();
+		return data->index.size();
 	}
 	ID3D11Buffer* GetVertexBuffer()
 	{
 		return data->vertexBuffer;
 	}
-	CellTransformation(std::string id,std::vector<glm::vec3> _vertex, glm::vec4 color)
+	ID3D11Buffer* GetIndexBuffer()
 	{
-		data = new TransformationData();
-		std::swap(data->vertex, _vertex);
+		return data->indexBuffer;
+	}
+	std::vector<std::string> GetChildren()
+	{
+		if (data->children.size() == 0)
+		{
+			std::string s = "THIS_OBJECT_DONT_HAVE_CHILDREN!";
+			return { s };
+		}
+		return data->children;
+	}
+	CellTransformation(TransformationData* data)
+	{
+		this->data = data;
+	}
+	void SetData(TransformationData* data)
+	{
+		this->data = data;
+	}
+	~CellTransformation()
+	{
+		std::cout << "release" << std::endl;
+		data->vertexBuffer->Release();
+		data->indexBuffer->Release();
 	}
 	void Map(ID3D11Device* device)
 	{
@@ -59,9 +83,22 @@ public:
 		subresourceData.pSysMem = data->vertex.data();
 
 		HRESULT hr = device->CreateBuffer(&bufferDesc, &subresourceData, &data->vertexBuffer);
+
+		D3D11_BUFFER_DESC bufferDesc2 = {};
+		D3D11_SUBRESOURCE_DATA subresourceData2 = {};
+
+		bufferDesc2 = {};
+		bufferDesc2.ByteWidth = data->index.size();
+		bufferDesc2.Usage = D3D11_USAGE_DEFAULT;
+		bufferDesc2.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+		subresourceData2 = {};
+		subresourceData2.pSysMem = data->index.data();
+
+		hr = device->CreateBuffer(&bufferDesc2, &subresourceData2, &data->indexBuffer);
 	}
 };
 
-std::unordered_map<const char*, CellTransformation*> vramData;
+std::unordered_map<std::string, CellTransformation*> vramData;
 
 #endif

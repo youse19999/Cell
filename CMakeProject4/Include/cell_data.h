@@ -8,8 +8,7 @@
 
 
 void SET_UP_CELL_DATA() {
-	gameObjects["triangle"] = new CellGameObject();
-	//gameObjects["triangle2"] = new ExampleCellGameObject();
+	gameObjects["triangle"] = new ExampleCellGameObject();
 }
 void RELEASE_ALL_CELL_DATA() {
 	for (auto cellData : cellDataMap)

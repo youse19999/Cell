@@ -1,69 +1,39 @@
-# CellGFXの特徴
+# CellGFXの紹介
 
-CellGFXは**グラフィックライブラリ**です。
+CellGFXはCPPですべてが記述可能なゲームエンジンです。
 
-UnityやUEなどのようなエンジンではないです。
+「高度で密度が高くシンプル」を目指しています。
 
-このエンジンは、ヘッダーオンリーです。
+使用するにはある程度の高度な知識が必要です。
 
-ヘッダーの読み込みの順序で様々な変化が起こる魔法のようなものです。
-
-基本的に、ヘッダー側の挙動の変更が前提なので難易度の高いライブラリにはなってます。
-
+## 使い方
 ```cpp
-#include <cell_gfx_dx11.h>
-#include <cell_gfx.h>
-```
-と読み込めば、directx11で動き
-```cpp
-#include <cell_gfx_vulkan.h>
-#include <cell_gfx.h>
-```
-と読み込めば、vulkanで動きます。
-
-
-```cpp
+#include "CMakeProject4.h"
+#include <d3d11.h>
+#include <cell_gfx_dx11_config.h>
+#include <cell_wit.h>
+#include <cell_wit_data.h>
+#include <cell_transformation.h>
+#include <cell_gameobject.h>
+#include<cell_data.h>
 #include <cell_gfx_dx11.h>
 #include <cell_gfx.h>
 
+//COUT
 int main()
 {
-	Cell cell;
-	cell.Run();
+	gameObjects["triangle"] = new ExampleCellGameObject();
+
+	CellGFX* gfx = new CellGFX();
+	gfx->Run();
+
+	delete gfx;
+
+	for (auto cellData : cellDataMap)
+	{
+		delete cellData.second;
+	}
+	return 0;
 }
 ```
-のみで初期化が完了します。
-```cpp
-#include <cell_gfx_dx11.h>
-
-#define USE_Z_BUFFER
-
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
-
-#define USE_3FLOAT_3FLOAT_2FLOAT_VERTEX_INPUT
-
-#define VERTEX_MEMORY_SIZE 4096
-
-#define TEXTURE_MEMORY_COUNT 4
-
-#include <cell_gfx.h>
-
-int main()
-{
-
-	Cell cell;
-	cell.Run();
-}
-```
-のように書くこと以外は許可されていません。
-ゲームのロジックは、CellGameObjectクラス内にすべて書きます。
-
-```cpp
-#include <cell_game_object.h>
-
-class Triangle::CellGameObject{
-{
-	WIT* wit = WIT::GET_WIT_ID(0);
-}
-```
+基本的にこの宣言のみでゲームが動きます。

@@ -76,6 +76,7 @@ private:
 		SafeRelease(renderTargetView);
 		SafeRelease(backBuffer);
 		SafeRelease(swapChain);
+
 		if (immediateContext)
 		{
 			immediateContext->ClearState();
@@ -114,6 +115,35 @@ protected:
 			object.second->CreateConstantBuffer(device);
 		}
 	}
+	void RenderObject(CellGameObject* object)
+	{
+		UINT stride = vertexStride * sizeof(float);
+		UINT offset = 0;
+		if (!object->GetVramData())
+		{
+			return;
+		}
+		ID3D11Buffer* vertexBuffer = object->GetVramData()->GetVertexBuffer();
+		immediateContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+		immediateContext->IASetIndexBuffer(object->GetVramData()->GetIndexBuffer(), DXGI_FORMAT_R16_UINT, 0);
+		immediateContext->IASetInputLayout(inputLayout);
+		immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		ID3D11Buffer* constantBuffer = object->GetConstantBuffer();
+		immediateContext->VSSetConstantBuffers(0, 1, &constantBuffer);
+		immediateContext->PSSetConstantBuffers(0, 1, &constantBuffer);
+
+		immediateContext->VSSetShader(vertexShader, nullptr, 0);
+		immediateContext->PSSetShader(pixelShader, nullptr, 0);
+
+
+		immediateContext->RSSetViewports(1, &viewport);
+
+		immediateContext->OMSetRenderTargets(1, &renderTargetView, nullptr);
+
+		immediateContext->DrawIndexed(object->GetVramData()->Size(), 0, 0);
+	}
+
 	//レンダー
 	void Render()
 	{
@@ -133,27 +163,7 @@ protected:
 			float clear_color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			immediateContext->ClearRenderTargetView(renderTargetView, clear_color);
 			for (auto obj : gameObjects) {
-
-				UINT stride = vertexStride * sizeof(float);
-				UINT offset = 0;
-				ID3D11Buffer* vertexBuffer = obj.second->GetVramData()->GetVertexBuffer();
-				immediateContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-				immediateContext->IASetInputLayout(inputLayout);
-				immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-				ID3D11Buffer* constantBuffer = obj.second->GetConstantBuffer();
-				immediateContext->VSSetConstantBuffers(0, 1, &constantBuffer);
-				immediateContext->PSSetConstantBuffers(0, 1, &constantBuffer);
-
-				immediateContext->VSSetShader(vertexShader, nullptr, 0);
-				immediateContext->PSSetShader(pixelShader, nullptr, 0);
-
-
-				immediateContext->RSSetViewports(1, &viewport);
-
-				immediateContext->OMSetRenderTargets(1, &renderTargetView, nullptr);
-
-				immediateContext->Draw(obj.second->GetVramData()->Size(), 0);
+				RenderObject(obj.second);
 			}
 
 			swapChain->Present(1, 0);
@@ -307,14 +317,10 @@ protected:
 			viewport.Width = (float)window_width;
 			viewport.Height = (float)window_height;
 		}
-
-		{
-			InitializeGameObject();
-		}
 	}
-	void CreateMemory()
+	void CreateBuffer()
 	{
-
+		InitializeGameObject();
 	}
 };
 

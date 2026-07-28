@@ -7,4 +7,5 @@
 Info/info.md
 Info/VRAM.md
 Info/FlatBuffer.md
+Info/Resource.md
 ```

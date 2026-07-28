@@ -11,19 +11,23 @@ const D3D11_INPUT_ELEMENT_DESC input_element_desc[] = {
 const char shaderSrc[] = R"(
             cbuffer ConstantBuffer:register(b0)
             {
-                float4 color;
+                float4x4 camera;
+                float4x4 view;
                 float4x4 model;
             };
 
             float4 vs_main(float3 position : Position) : SV_Position
             {
                 float4 pos = float4(position, 1);
-                return mul(pos,model);
+                pos = mul(pos,camera);
+                pos = mul(pos,view);
+                pos = mul(pos,model);
+                return pos;
             }
             
             float4 ps_main() : SV_Target
             {
-                return mul(color,model);
+                return (1.0,1.0,1.0,1.0);
             }
         )";
 
