@@ -13,18 +13,18 @@
 //グラフィックのヘッダーが読み込まれている場合
 
 
-class CellGFX:Trampoline {
+class CellGFX :Trampoline {
 public:
 	void Run()
 	{
 		Initialize();
-		WriteVertexMemory("G://CellGPU//CMakeProject4//ExampleData//SomeBox.glb","SomeBox");
-		WriteVertexMemory("G://CellGPU//CMakeProject4//ExampleData//Kuromoji_v12.0_Basic.glb","Kuromoji");
+		WriteVertexMemory("G://CellGPU//CMakeProject4//ExampleData//SomeBox.glb", "SomeBox");
+		WriteVertexMemory("G://CellGPU//CMakeProject4//ExampleData//Kuromoji_v12.0_Basic.glb", "Kuromoji");
 		CreateBuffer();
 		BindData();
 		Render();
 	}
-	void WriteVertexMemory(std::string path,std::string uniqueID)
+	void WriteVertexMemory(std::string path, std::string uniqueID)
 	{
 		tinygltf::TinyGLTF loader;
 		tinygltf::Model model;
@@ -54,6 +54,14 @@ public:
 			{
 				tdata->isMesh = true;
 				std::vector<float> mergedPositions;
+				std::vector<float> mergedNormals;
+				std::vector<float> mergedUv;
+				std::vector<float> mergedWeight;
+				std::vector<float> mergedJoint;
+
+				bool jointEnabled = false;
+				bool weightEnabled = false;
+
 				for (auto primitive : model.meshes[node.mesh].primitives)
 				{
 					for (auto attribute : primitive.attributes) {
@@ -71,16 +79,94 @@ public:
 						}
 						if (attribute.first == "NORMAL")
 						{
-							//std::memcpy(tdata.vertex.data(), data.data(), data.size());
+							const unsigned char* src = buffer.data.data() + view.byteOffset;
+							size_t size = view.byteLength;
+							std::vector<float> g;
+							g.resize(size);
+							std::memcpy(g.data(), src, size);
+							mergedNormals.insert(mergedNormals.end(), g.begin(), g.end());
 						}
 						if (attribute.first == "TEXCOORD_0")
 						{
-							//std::memcpy(tdata.vertex.data(), data.data(), data.size());
+							const unsigned char* src = buffer.data.data() + view.byteOffset;
+							size_t size = view.byteLength;
+							std::vector<float> g;
+							g.resize(size);
+							std::memcpy(g.data(), src, size);
+							mergedUv.insert(mergedUv.end(), g.begin(), g.end());
+						}
+						if (attribute.first == "TEXCOORD_0")
+						{
+							const unsigned char* src = buffer.data.data() + view.byteOffset;
+							size_t size = view.byteLength;
+							std::vector<float> g;
+							g.resize(size);
+							std::memcpy(g.data(), src, size);
+							mergedUv.insert(mergedUv.end(), g.begin(), g.end());
+						}
+						if (attribute.first == "JOINTS_0")
+						{
+							jointEnabled = false;
+							const unsigned char* src = buffer.data.data() + view.byteOffset;
+							size_t size = view.byteLength;
+							std::vector<float> g;
+							g.resize(size);
+							std::memcpy(g.data(), src, size);
+							mergedJoint.insert(mergedJoint.end(), g.begin(), g.end());
+						}
+						if (attribute.first == "WEIGHTS_0")
+						{
+							weightEnabled = false;
+							const unsigned char* src = buffer.data.data() + view.byteOffset;
+							size_t size = view.byteLength;
+							std::vector<float> g;
+							g.resize(size);
+							std::memcpy(g.data(), src, size);
+							mergedWeight.insert(mergedWeight.end(), g.begin(), g.end());
 						}
 					}
 				}
-				tdata->vertex.resize(mergedPositions.size());
-				std::memcpy(tdata->vertex.data(), mergedPositions.data(), mergedPositions.size());
+				std::vector<unsigned char> gpuFloats;
+
+				std::vector<Vertex> vertices(mergedPositions.size());
+				for (size_t i = 0; i < mergedPositions.size() / 3; i++) {
+					for (int i2 = 0;i2 < 3;i2++)
+					{
+						float f = mergedPositions[(i * 3) + i2];
+						const auto* p = reinterpret_cast<const unsigned char*>(&f);
+						gpuFloats.insert(gpuFloats.end(), p, p + sizeof(float));
+						//std::cout << *reinterpret_cast<float*>(bytes) << " ";
+					}
+					for (int i2 = 0;i2 < 3;i2++)
+					{
+						float f = mergedNormals[(i * 3) + i2];
+						const auto* p = reinterpret_cast<const unsigned char*>(&f);
+						gpuFloats.insert(gpuFloats.end(), p, p + sizeof(float));
+					}
+					for (int i2 = 0;i2 < 2;i2++)
+					{
+						float f = mergedUv[(i * 2) + i2];
+						const auto* p = reinterpret_cast<const unsigned char*>(&f);
+						gpuFloats.insert(gpuFloats.end(), p, p + sizeof(float));
+					}
+					for (int i2 = 0;i2 < 4;i2++)
+					{
+						if (jointEnabled)
+						{
+							//gpuFloats.push_back(mergedJoint[(i * 4) + i2]);
+						}
+					}
+					for (int i2 = 0;i2 < 4;i2++)
+					{
+						if (weightEnabled)
+						{
+							//gpuFloats.push_back(mergedWeight[(i * 4) + i2]);
+						}
+					}
+				}
+
+				tdata->vertex.resize(gpuFloats.size());
+				std::memcpy(tdata->vertex.data(), gpuFloats.data(), gpuFloats.size());
 
 				int type = model.accessors[model.meshes[node.mesh].primitives[0].indices].componentType;
 
