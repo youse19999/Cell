@@ -19,7 +19,7 @@ public:
 	{
 		Initialize();
 		WriteVertexMemory("G://CellGPU//CMakeProject4//ExampleData//SomeBox.glb","SomeBox");
-		//riteVertexMemory("G://CellGPU//CMakeProject4//ExampleData//Kuromoji_v12.0_Basic.glb","Kuromoji");
+		WriteVertexMemory("G://CellGPU//CMakeProject4//ExampleData//Kuromoji_v12.0_Basic.glb","Kuromoji");
 		CreateBuffer();
 		BindData();
 		Render();
@@ -37,77 +37,67 @@ public:
 			std::cout << err << std::endl;
 			std::cout << warn << std::endl;
 		}
-		
-		struct VramData {
-			std::string id;
-			std::vector<glm::vec3> vercites;
-			std::vector<unsigned char> indices;
-			std::vector<glm::vec3> normals;
-			std::vector<glm::vec3> uv;
-			std::vector<std::string> children;
-		};
 
-		std::vector<VramData> vramDatas(0);
-
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<int> distrib(1, 10000);
 		int index = 0;
 		for (auto node : model.nodes)
 		{
 			std::stringstream id;
 			id << node.name;
 
-			VramData pushData;
-			pushData.id = id.str();
+			TransformationData* tdata = new TransformationData();
+			tdata->id = uniqueID.c_str();
 			if (node.mesh == -1)
 			{
 				continue;
 			}
+			std::vector<float> mergedPositions;
 			for (auto primitive : model.meshes[node.mesh].primitives)
 			{
 				for (auto attribute : primitive.attributes) {
+					tinygltf::BufferView view = model.bufferViews[model.accessors[attribute.second].bufferView];
+					tinygltf::Buffer& buffer = model.buffers[view.buffer];
 					if (attribute.first == "POSITION")
 					{
-						tinygltf::BufferView view = model.bufferViews[model.accessors[attribute.second].bufferView];
-						std::vector<unsigned char> data(model.buffers[view.buffer].data.begin() + view.byteOffset, model.buffers[view.buffer].data.begin() + view.byteOffset + view.byteLength);
-						size_t numVecs = data.size() / sizeof(glm::vec3);
-						pushData.vercites.resize(numVecs);
-						std::memcpy(pushData.vercites.data(), data.data(), numVecs * sizeof(glm::vec3));
+						const unsigned char* src = buffer.data.data() + view.byteOffset;
+						size_t size = view.byteLength;
+						std::vector<float> g;
+						g.resize(size);
+						std::memcpy(g.data(), src, size);
+						tdata->vertex.assign(tdata->vertex.begin(), tdata->vertex.end());
+						mergedPositions.insert(mergedPositions.end(), g.begin(), g.end());
+						std::cout << mergedPositions.size() << std::endl;
 					}
 					if (attribute.first == "NORMAL")
 					{
-						tinygltf::BufferView view = model.bufferViews[model.accessors[attribute.second].bufferView];
-						std::vector<unsigned char> data(model.buffers[view.buffer].data.begin() + view.byteOffset, model.buffers[view.buffer].data.begin() + view.byteOffset + view.byteLength);
-						size_t numVecs = data.size() / sizeof(glm::vec3);
-						pushData.normals.resize(numVecs);
-						std::memcpy(pushData.normals.data(), data.data(), numVecs * sizeof(glm::vec3));
+						//std::memcpy(tdata.vertex.data(), data.data(), data.size());
 					}
 					if (attribute.first == "TEXCOORD_0")
 					{
-						tinygltf::BufferView view = model.bufferViews[model.accessors[attribute.second].bufferView];
-						std::vector<unsigned char> data(model.buffers[view.buffer].data.begin() + view.byteOffset, model.buffers[view.buffer].data.begin() + view.byteOffset + view.byteLength);
-						size_t numVecs = data.size() / sizeof(glm::vec2);
-						pushData.uv.resize(numVecs);
-						std::memcpy(pushData.uv.data(), data.data(), numVecs * sizeof(glm::vec2));
+						//std::memcpy(tdata.vertex.data(), data.data(), data.size());
 					}
 				}
 			}
-			for (auto child : node.children)
-			{
-				pushData.children.push_back(model.nodes[child].name);
-			}
+			tdata->vertex.resize(mergedPositions.size());
+			std::memcpy(tdata->vertex.data(), mergedPositions.data(), mergedPositions.size());
 
 			int type = model.accessors[model.meshes[node.mesh].primitives[0].indices].componentType;
 
-			tinygltf::BufferView indexView = model.bufferViews[model.accessors[model.meshes[node.mesh].primitives[0].indices].bufferView];
-			std::vector<unsigned char> indicesData(model.buffers[indexView.buffer].data.begin() + indexView.byteOffset, model.buffers[indexView.buffer].data.begin() + indexView.byteOffset + indexView.byteLength);
-			pushData.indices = indicesData;
-			vramDatas.push_back(pushData);
-		}
-		for (auto data : vramDatas) {
-			std::cout << data.id << std::endl;
-			vramData[data.id] = new CellTransformation(uniqueID, data.vercites,data.indices,data.children);
+			tinygltf::Accessor& accessor = model.accessors[model.meshes[node.mesh].primitives[0].indices];
+			tinygltf::BufferView& indexView = model.bufferViews[accessor.bufferView];
+			tinygltf::Buffer& buffer = model.buffers[indexView.buffer];
+			size_t componentSize = tinygltf::GetComponentSizeInBytes(accessor.componentType);
+			size_t numComponents = tinygltf::GetNumComponentsInType(accessor.type);
+			size_t dataSize = accessor.count * numComponents * componentSize;
+
+			const unsigned char* src = buffer.data.data() + indexView.byteOffset + accessor.byteOffset;
+
+			tdata->index.resize(dataSize);
+			std::memcpy(tdata->index.data(), src, dataSize);
+
+			tdata->indexType = accessor.componentType;
+			vramData[node.name] = new CellTransformation(tdata);
+
+
 		}
 	}
 };

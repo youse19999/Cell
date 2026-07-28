@@ -5,6 +5,7 @@
 #include <glm/vec4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
+#include <tiny_gltf.h>
 
 //指定のコンスタントバッファー
 struct ConstantBuffer
@@ -21,11 +22,13 @@ struct TransformationData {
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
 	//定数メモリのポインタとしてのID3D11Buffer（COMポインタ）
-	std::vector<glm::vec3> vertex;
+	std::vector<float> vertex;
 	std::vector<unsigned char> index;
 	std::vector<std::string> children;
 	//ここからConstantBuffer分の定数のVRAM
 	ConstantBuffer cbuffer;
+
+	unsigned int indexType;
 };
 
 
@@ -40,6 +43,20 @@ public:
 	ID3D11Buffer* GetVertexBuffer()
 	{
 		return data->vertexBuffer;
+	}
+	DXGI_FORMAT GetIndexType()
+	{
+		switch (data->indexType)
+		{
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+			return DXGI_FORMAT_R8_UINT;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+			return DXGI_FORMAT_R16_UINT;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+			return DXGI_FORMAT_R32_UINT;
+		default:
+			return DXGI_FORMAT_UNKNOWN;
+		}
 	}
 	ID3D11Buffer* GetIndexBuffer()
 	{
@@ -74,10 +91,10 @@ public:
 		D3D11_SUBRESOURCE_DATA subresourceData = {};
 
 		bufferDesc = {};
-		bufferDesc.ByteWidth = sizeof(glm::vec3) * data->vertex.size();
+		bufferDesc.ByteWidth = data->vertex.size();
 		bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		bufferDesc.StructureByteStride = vertexStride * sizeof(float);
+		
 
 		subresourceData = {};
 		subresourceData.pSysMem = data->vertex.data();
@@ -89,13 +106,15 @@ public:
 
 		bufferDesc2 = {};
 		bufferDesc2.ByteWidth = data->index.size();
-		bufferDesc2.Usage = D3D11_USAGE_DEFAULT;
+		bufferDesc2.Usage = D3D11_USAGE_IMMUTABLE;
 		bufferDesc2.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
 		subresourceData2 = {};
 		subresourceData2.pSysMem = data->index.data();
 
 		hr = device->CreateBuffer(&bufferDesc2, &subresourceData2, &data->indexBuffer);
+
+
 	}
 };
 

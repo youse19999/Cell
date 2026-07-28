@@ -122,7 +122,7 @@ public:
 
 class ExampleCellGameObject :public HaveParentAndChildObject {
 private:
-	const char* WISId = "Suzanne";
+	const char* WISId = "Body_2";
 public:
 	virtual CellTransformation* GetVramData()
 	{

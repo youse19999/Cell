@@ -27,7 +27,7 @@ private:
 
 	std::string name = "HelloWorld";
 
-	std::vector<glm::vec3> transformationsVertex;
+	std::vector<float> transformationsVertex;
 	std::vector<ConstantBuffer> transformationsConstrantBuffer;
 
 	ID3D11Device* device;
@@ -125,7 +125,8 @@ protected:
 		}
 		ID3D11Buffer* vertexBuffer = object->GetVramData()->GetVertexBuffer();
 		immediateContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-		immediateContext->IASetIndexBuffer(object->GetVramData()->GetIndexBuffer(), DXGI_FORMAT_R16_UINT, 0);
+		
+		immediateContext->IASetIndexBuffer(object->GetVramData()->GetIndexBuffer(), object->GetVramData()->GetIndexType(), 0);
 		immediateContext->IASetInputLayout(inputLayout);
 		immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
