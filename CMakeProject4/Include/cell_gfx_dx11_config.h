@@ -7,7 +7,9 @@
 const D3D11_INPUT_ELEMENT_DESC input_element_desc[] = {
     {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
     {"Nomral", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-    {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
+    {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    {"Joint", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    {"Weight", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
 };
 
 const char shaderSrc[] = R"(
@@ -17,6 +19,8 @@ const char shaderSrc[] = R"(
                 float3 position   : Position;
                 float3 normal : Nomral;
                 float2 uv : UV;
+                int4 joint : Joint;
+                float4 weight : Weight;
             };
 
             struct VS_OUTPUT
@@ -24,6 +28,8 @@ const char shaderSrc[] = R"(
                 float4 position   : SV_POSITION;
                 float3 normal : Normal;
                 float2 uv : UV;
+                int4 joint : Joint;
+                float4 weight : Weight;
             };
 
 
@@ -44,16 +50,18 @@ const char shaderSrc[] = R"(
                 output.position = pos;
                 output.normal = input.normal;
                 output.uv = input.uv;
+                output.uv = input.uv;
+                output.joint = input.joint;
                 return output;
             }
             
             float4 ps_main(VS_OUTPUT input) : SV_TARGET
             {
-                return float4(input.normal.x, input.normal.y, input.normal.z, 1.0);
+                return input.weight;
             }
         )";
 
-const unsigned int vertexStride = 8;
+const unsigned int vertexStride = 64;
 
 const std::string CGFX_WINDOW_NAME = "CGFX_WINDOW_NOT_CHANGED";
 const std::string CGFX_CLASS_NAME = "CGFX_CLASS_NOT_CHANGED";

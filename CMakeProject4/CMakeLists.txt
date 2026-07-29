@@ -1,7 +1,6 @@
 ﻿# CMakeList.txt : CMakeProject4 の CMake プロジェクト。ソースを含めて、次を定義します:
 # プロジェクト専用ロジックはこちらです。
 #
-
 # ソースをこのプロジェクトの実行可能ファイルに追加します。
 add_executable (CMakeProject4 "CMakeProject4.cpp" "CMakeProject4.h" "Include/loader/tiny_gltf.cc")
 

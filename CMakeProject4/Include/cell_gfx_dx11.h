@@ -27,7 +27,7 @@ private:
 
 	std::string name = "HelloWorld";
 
-	std::vector<float> transformationsVertex;
+	std::vector<Vertex> transformationsVertex;
 	std::vector<ConstantBuffer> transformationsConstrantBuffer;
 
 	ID3D11Device* device;
@@ -118,7 +118,6 @@ protected:
 					continue;
 				}
 				if (transformation->GetVertexBuffer()) {
-					std::cout << vramData[child]->GetName() << std::endl;
 					RenderObject(constantBuffer, vramData[child]);
 					RenderChildrenLoop(constantBuffer, vramData[child]);
 				}
@@ -133,7 +132,7 @@ protected:
 	}
 	void RenderObject(ID3D11Buffer* constantBuffer,CellTransformation* transformation)
 	{
-		UINT stride = vertexStride * sizeof(float);
+		UINT stride = vertexStride;
 		UINT offset = 0;
 		ID3D11Buffer* vertexBuffer = transformation->GetVertexBuffer();
 		immediateContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
@@ -153,7 +152,7 @@ protected:
 
 		immediateContext->OMSetRenderTargets(1, &renderTargetView, nullptr);
 
-		immediateContext->DrawIndexed(transformation->Size(), 0, 0);
+		immediateContext->DrawIndexed(transformation->Size()/2, 0, 0);
 	}
 
 	//レンダー

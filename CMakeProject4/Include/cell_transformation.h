@@ -15,22 +15,26 @@ struct ConstantBuffer
 	glm::mat4 model;
 };
 
+//バーテックスの構造体、基本的に横並びになる。
 struct Vertex {
-	glm::vec3 pos;
-	glm::vec3 normal;
-	glm::vec2 uv;
+	float position[3] = { 0.0f, 0.0f, 0.0f };
+	float normal[3] = { 0.0f, 0.0f, 0.0f };
+	float uv[2] = { 0.0f, 0.0f };
+	int32_t joint[4] = { 0, 0, 0, 0 };
+	float weight[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 };
 
 //トランスフォーメーションのデータ
 struct TransformationData {
 	const char* id;
 	std::string name;
+	bool hasSkin = false;
 	//頂点メモリのポインタとしてのID3D11Buffer（COMポインタ）
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
 	//定数メモリのポインタとしてのID3D11Buffer（COMポインタ）
-	std::vector<float> vertex;
-	std::vector<unsigned char> index;
+	std::vector<Vertex> vertex;
+	std::vector<unsigned short> index;
 	std::vector<std::string> children;
 	//ここからConstantBuffer分の定数のVRAM
 	ConstantBuffer cbuffer;
@@ -96,11 +100,17 @@ public:
 	}
 	void Map(ID3D11Device* device)
 	{
+		if (data->vertex.size() == 0)
+		{
+			return;
+		}
 		D3D11_BUFFER_DESC bufferDesc = {};
 		D3D11_SUBRESOURCE_DATA subresourceData = {};
 
+		int size = sizeof(Vertex);
+
 		bufferDesc = {};
-		bufferDesc.ByteWidth = data->vertex.size();
+		bufferDesc.ByteWidth = data->vertex.size()*sizeof(Vertex);
 		bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		
