@@ -57,7 +57,7 @@ const char shaderSrc[] = R"(
             
             float4 ps_main(VS_OUTPUT input) : SV_TARGET
             {
-                return input.weight;
+                return float4(input.uv,1.0,1.0);
             }
         )";
 
