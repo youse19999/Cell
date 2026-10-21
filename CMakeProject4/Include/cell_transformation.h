@@ -36,6 +36,8 @@ struct TransformationData {
 	std::vector<Vertex> vertex;
 	std::vector<unsigned short> index;
 	std::vector<std::string> children;
+	//テクスチャ
+	std::vector<unsigned char> textureBuffer;
 	//ここからConstantBuffer分の定数のVRAM
 	ConstantBuffer cbuffer;
 

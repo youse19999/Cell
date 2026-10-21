@@ -2,7 +2,5 @@
 out
 CMakeProject4/latex
 CMakeProject4/xml
-CMakeProject4/Include/glm
-CMakeProject4/Include/loader
 ExampleData/
 CMakeProject4/glm-master.zip

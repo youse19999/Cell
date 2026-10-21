@@ -121,6 +121,12 @@ public:
 
 				for (auto primitive : model.meshes[node.mesh].primitives)
 				{
+					if (primitive.material != -1) {
+						tinygltf::Material material = model.materials[primitive.material];
+						if (material.pbrMetallicRoughness.baseColorTexture.index<model.images.size()) {
+							tdata->textureBuffer = model.images[material.pbrMetallicRoughness.baseColorTexture.index].image;
+						}
+					}
 					auto getAttributeAccessor = [&](const std::string& attrName) -> AttributeAccessor {
 						auto it = primitive.attributes.find(attrName);
 						//attributesが終了、つまり何もない場合
